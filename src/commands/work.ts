@@ -1,10 +1,10 @@
 import { ChatInputCommandInteraction, EmbedBuilder, SlashCommandBuilder, Colors } from 'discord.js';
 import { Command } from '../structures/Command';
 import { BotClient } from '../structures/BotClient';
-import { DatabaseService } from '../services/DatabaseService';
+import { PocketBaseService } from '../services/PocketBaseService';
 import { Utils } from '../utils/Utils';
 
-const database = new DatabaseService();
+const database = new PocketBaseService();
 const WORK_COOLDOWN = 60 * 60 * 1000; // 1 hour
 
 const JOBS = [
@@ -35,7 +35,7 @@ export default class WorkCommand extends Command {
   }
 
   async execute(interaction: ChatInputCommandInteraction, client: BotClient): Promise<void> {
-    const balance = database.getBalance(interaction.user.id);
+    const balance = await database.getBalance(interaction.user.id);
     const lastWork = balance.lastDaily; // Reusing lastDaily for work cooldown
 
     if (!Utils.canClaim(lastWork, WORK_COOLDOWN)) {
@@ -61,7 +61,7 @@ export default class WorkCommand extends Command {
     const totalEarnings = earnings + bonus;
 
     // Update balance
-    database.addCoins(interaction.user.id, totalEarnings);
+    await database.addCoins(interaction.user.id, totalEarnings);
 
     const embed = new EmbedBuilder()
       .setColor(Colors.Green)
@@ -82,7 +82,7 @@ export default class WorkCommand extends Command {
       { name: '📊 Total', value: `**${Utils.formatNumber(totalEarnings)} coins**`, inline: false }
     );
 
-    const newBalance = database.getBalance(interaction.user.id);
+    const newBalance = await database.getBalance(interaction.user.id);
     embed.addFields(
       { name: '💼 Your Balance', value: `${Utils.formatNumber(newBalance.coins)} coins`, inline: false }
     );

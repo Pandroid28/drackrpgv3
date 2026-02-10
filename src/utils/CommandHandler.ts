@@ -3,6 +3,7 @@ import { join } from 'path';
 import { BotClient } from '../structures/BotClient';
 import { Command } from '../structures/Command';
 import { REST, Routes } from 'discord.js';
+import { log } from 'console';
 
 export class CommandHandler {
   private client: BotClient;
@@ -21,7 +22,8 @@ export class CommandHandler {
       try {
         const filePath = join(commandsPath, file);
         const { default: CommandClass } = await import(filePath);
-        
+        log(file)
+        log(filePath)
         if (!CommandClass) {
           console.warn(`⚠️  ${file} doesn't have a default export`);
           continue;

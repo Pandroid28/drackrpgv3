@@ -1,10 +1,10 @@
 import { ChatInputCommandInteraction, EmbedBuilder, SlashCommandBuilder, Colors, SlashCommandOptionsOnlyBuilder } from 'discord.js';
 import { Command } from '../structures/Command';
 import { BotClient } from '../structures/BotClient';
-import { DatabaseService } from '../services/DatabaseService';
+import { PocketBaseService } from '../services/PocketBaseService';
 import { Utils } from '../utils/Utils';
 
-const database = new DatabaseService();
+const database = new PocketBaseService();
 
 export default class BalanceCommand extends Command {
   constructor() {
@@ -30,7 +30,7 @@ export default class BalanceCommand extends Command {
 
   async execute(interaction: ChatInputCommandInteraction, client: BotClient): Promise<void> {
     const targetUser = interaction.options.getUser('user') || interaction.user;
-    const balance = database.getBalance(targetUser.id);
+    const balance = await database.getBalance(targetUser.id);
 
     const embed = new EmbedBuilder()
       .setColor(Colors.Gold)

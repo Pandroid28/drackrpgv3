@@ -116,7 +116,7 @@ export class PocketBaseService {
     return JSON.stringify(inventory);
   }
 
-  private convertFromPB(record: PocketBaseUserBalance): UserBalance {
+  private convertFromPB(record: UserBalance): UserBalance {
     return {
       userId: record.userId,
       coins: record.coins,
@@ -127,15 +127,15 @@ export class PocketBaseService {
     };
   }
 
-  private convertToPB(balance: Partial<UserBalance>): Partial<PocketBaseUserBalance> {
-    const data: Partial<PocketBaseUserBalance> = {
+  private convertToPB(balance: Partial<UserBalance>): Partial<UserBalance> {
+    const data: Partial<UserBalance> = {
       userId: balance.userId,
       coins: balance.coins,
       gems: balance.gems,
       lastDaily: balance.lastDaily,
       lastWeekly: balance.lastWeekly
     };
-
+//pending
     if (balance.inventory) {
       data.inventory = this.stringifyInventory(balance.inventory);
     }
@@ -145,7 +145,7 @@ export class PocketBaseService {
 
   public async getBalance(userId: string): Promise<UserBalance> {
     try {
-      const records = await this.pb.collection(this.collectionName).getList<PocketBaseUserBalance>(1, 1, {
+      const records = await this.pb.collection(this.collectionName).getList<UserBalance>(1, 1, {
         filter: `userId = "${userId}"`
       });
 
@@ -160,7 +160,7 @@ export class PocketBaseService {
         inventory: []
       };
 
-      const created = await this.pb.collection(this.collectionName).create<PocketBaseUserBalance>(
+      const created = await this.pb.collection(this.collectionName).create<UserBalance>(
         this.convertToPB(newBalance)
       );
 
@@ -178,20 +178,20 @@ export class PocketBaseService {
 
   public async updateBalance(userId: string, update: Partial<UserBalance>): Promise<UserBalance> {
     try {
-      const records = await this.pb.collection(this.collectionName).getList<PocketBaseUserBalance>(1, 1, {
+      const records = await this.pb.collection(this.collectionName).getList<UserBalance>(1, 1, {
         filter: `userId = "${userId}"`
       });
 
       if (records.items.length === 0) {
         const newBalance = { userId, ...update };
-        const created = await this.pb.collection(this.collectionName).create<PocketBaseUserBalance>(
+        const created = await this.pb.collection(this.collectionName).create<UserBalance>(
           this.convertToPB(newBalance as UserBalance)
         );
         return this.convertFromPB(created);
       }
 
-      const recordId = records.items[0].id!;
-      const updated = await this.pb.collection(this.collectionName).update<PocketBaseUserBalance>(
+      const recordId = records.items[0].userId!;
+      const updated = await this.pb.collection(this.collectionName).update<UserBalance>(
         recordId,
         this.convertToPB(update)
       );
@@ -257,7 +257,7 @@ export class PocketBaseService {
 
   public async getAllBalances(): Promise<UserBalance[]> {
     try {
-      const records = await this.pb.collection(this.collectionName).getFullList<PocketBaseUserBalance>({
+      const records = await this.pb.collection(this.collectionName).getFullList<UserBalance>({
         sort: '-coins'
       });
       return records.map(record => this.convertFromPB(record));
@@ -269,7 +269,7 @@ export class PocketBaseService {
 
   public async getTopUsers(limit: number = 10): Promise<UserBalance[]> {
     try {
-      const records = await this.pb.collection(this.collectionName).getList<PocketBaseUserBalance>(1, limit, {
+      const records = await this.pb.collection(this.collectionName).getList<UserBalance>(1, limit, {
         sort: '-coins'
       });
       return records.items.map(record => this.convertFromPB(record));
@@ -286,7 +286,7 @@ export class PocketBaseService {
 
     for (const [userId, balance] of Object.entries(jsonData)) {
       try {
-        const existing = await this.pb.collection(this.collectionName).getList<PocketBaseUserBalance>(1, 1, {
+        const existing = await this.pb.collection(this.collectionName).getList<UserBalance>(1, 1, {
           filter: `userId = "${userId}"`
         });
 
@@ -295,7 +295,7 @@ export class PocketBaseService {
           continue;
         }
 
-        await this.pb.collection(this.collectionName).create<PocketBaseUserBalance>(
+        await this.pb.collection(this.collectionName).create<UserBalance>(
           this.convertToPB(balance)
         );
         imported++;

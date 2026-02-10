@@ -1,10 +1,11 @@
 import { ChatInputCommandInteraction, EmbedBuilder, SlashCommandBuilder, Colors } from 'discord.js';
 import { Command } from '../structures/Command';
 import { BotClient } from '../structures/BotClient';
-import { DatabaseService } from '../services/DatabaseService';
+import { PocketBaseService } from '../services/PocketBaseService';
 import { Utils } from '../utils/Utils';
+import { UserBalance } from '../types/RPGTypes';
 
-const database = new DatabaseService();
+const database = new PocketBaseService();
 
 export default class LeaderboardCommand extends Command {
   constructor() {
@@ -32,7 +33,7 @@ export default class LeaderboardCommand extends Command {
 
   async execute(interaction: ChatInputCommandInteraction, client: BotClient): Promise<void> {
     const limit = interaction.options.getInteger('limit') || 10;
-    const topUsers = database.getTopUsers(limit);
+    const topUsers = await database.getTopUsers(limit);
 
     if (topUsers.length === 0) {
       await interaction.reply({
@@ -46,7 +47,7 @@ export default class LeaderboardCommand extends Command {
     }
 
     const leaderboardText = await Promise.all(
-      topUsers.map(async (balance, index) => {
+      topUsers.map(async (balance:UserBalance, index: number) => {
         const user = await client.users.fetch(balance.userId).catch(() => null);
         const username = user ? user.username : 'Unknown User';
         const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`;
@@ -63,9 +64,9 @@ export default class LeaderboardCommand extends Command {
       .setFooter({ text: `Showing top ${topUsers.length} users` });
 
     // Add user's position if not in top list
-    const userBalance = database.getBalance(interaction.user.id);
-    const allUsers = database.getAllBalances().sort((a, b) => b.coins - a.coins);
-    const userPosition = allUsers.findIndex(b => b.userId === interaction.user.id) + 1;
+    const userBalance: UserBalance = await database.getBalance(interaction.user.id);
+    const allUsers: UserBalance[] = (await database.getAllBalances()).sort((a : UserBalance, b: UserBalance) => b.coins - a.coins);
+    const userPosition = allUsers.findIndex((b: UserBalance) => b.userId === interaction.user.id) + 1;
 
     if (userPosition > limit) {
       embed.addFields({

@@ -3,10 +3,12 @@ import { GatewayIntentBits, Partials } from 'discord.js';
 import { BotClient } from './structures/BotClient';
 import { CommandHandler } from './utils/CommandHandler';
 import { EventHandler } from './utils/EventHandler';
-
+import { AutoPoster } from 'topgg-autoposter'
+import express from 'express'
+import {Webhook} from '@top-gg/sdk'
 // Load environment variables
 config();
-
+const app = express()
 // Validate environment variables
 const requiredEnvVars = ['DISCORD_TOKEN', 'DISCORD_CLIENT_ID', 'OWNER_ID'];
 for (const envVar of requiredEnvVars) {
@@ -32,6 +34,12 @@ const client = new BotClient({
   ],
   ownerId: process.env.OWNER_ID!
 });
+const TOPGG_TOKEN = () => {
+  if (process.env.TOPGG_TOKEN) {
+    return process.env.TOPGG_TOKEN
+  }
+  throw Error("TOPGG_TOKEN cant be empty")
+}
 
 // Initialize handlers
 const commandHandler = new CommandHandler(client);
@@ -56,6 +64,18 @@ async function start() {
       process.env.DISCORD_TOKEN!,
       process.env.DISCORD_CLIENT_ID!
     );
+    const ap = AutoPoster(TOPGG_TOKEN(), client)
+    ap.on('posted', () => {
+      console.log('Posted stats to Top.gg!')
+    })
+    const webhook = new Webhook()
+
+    app.post("/dblwebhook", webhook.listener(vote => {
+      // vote will be your vote object, e.g
+      console.log('El usuario voto:', vote.user) // 395526710101278721 < user who voted\
+
+      // You can also throw an error to the listener callback in order to resend the webhook after a few seconds
+    }))
 
   } catch (error) {
     console.error('❌ Failed to start bot:', error);
@@ -81,3 +101,4 @@ process.on('SIGINT', () => {
 
 // Start the bot
 start();
+app.listen(3000)

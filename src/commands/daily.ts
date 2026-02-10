@@ -1,10 +1,10 @@
 import { ChatInputCommandInteraction, EmbedBuilder, SlashCommandBuilder, Colors } from 'discord.js';
 import { Command } from '../structures/Command';
 import { BotClient } from '../structures/BotClient';
-import { DatabaseService } from '../services/DatabaseService';
+import { PocketBaseService } from '../services/PocketBaseService';
 import { Utils } from '../utils/Utils';
 
-const database = new DatabaseService();
+const database = new PocketBaseService();
 const DAILY_COOLDOWN = 24 * 60 * 60 * 1000; // 24 hours
 const DAILY_REWARD = { coins: 100, gems: 5 };
 
@@ -25,7 +25,7 @@ export default class DailyCommand extends Command {
   }
 
   async execute(interaction: ChatInputCommandInteraction, client: BotClient): Promise<void> {
-    const balance = database.getBalance(interaction.user.id);
+    const balance = await database.getBalance(interaction.user.id);
 
     if (!Utils.canClaim(balance.lastDaily, DAILY_COOLDOWN)) {
       const remaining = Utils.getClaimCooldown(balance.lastDaily, DAILY_COOLDOWN);

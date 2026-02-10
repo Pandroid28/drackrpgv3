@@ -5,9 +5,9 @@ import {
   Colors} from 'discord.js';
 import { Command } from '../structures/Command';
 import { BotClient } from '../structures/BotClient';
-import { DatabaseService } from '../services/DatabaseService';
+import { PocketBaseService } from '../services/PocketBaseService';
 
-const database = new DatabaseService();
+const database = new PocketBaseService();
 
 export default class InventoryCommand extends Command {
   constructor() {
@@ -33,7 +33,7 @@ export default class InventoryCommand extends Command {
 
   async execute(interaction: ChatInputCommandInteraction, client: BotClient): Promise<void> {
     const targetUser = interaction.options.getUser('user') || interaction.user;
-    const balance = database.getBalance(targetUser.id);
+    const balance = await database.getBalance(targetUser.id);
 
     if (balance.inventory.length === 0) {
       const embed = new EmbedBuilder()
